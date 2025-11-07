@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XStream Live Channels Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .login-card, .categories-section, .channels-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .login-card {
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .count-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            text-align: center;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+        }
+
+        .category-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .category-count {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .channels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .channel-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .channel-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .channel-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: white;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .channel-logo.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .channel-details {
+            flex: 1;
+        }
+
+        .channel-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+
+        .channel-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .channel-url {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #555;
+            word-break: break-all;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .btn-copy {
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-copy:hover {
+            background: #45a049;
+        }
+
+        .btn-copy.copied {
+            background: #2196F3;
+        }
+
+        .error-message {
+            background: #ff5252;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logout-btn, .back-btn {
+            background: #ff5252;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn {
+            background: #2196F3;
+        }
+
+        .logout-btn:hover {
+            background: #ff1744;
+        }
+
+        .back-btn:hover {
+            background: #1976D2;
+        }
+
+        .breadcrumb {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .categories-grid, .channels-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .channel-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .channel-logo {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 XStream Live Channels</h1>
+            <p>عارض قنوات البث المباشر</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="login-card">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">تسجيل الدخول</h2>
+            <div id="errorMessage" class="error-message hidden"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="host">رابط الخادم (Host)</label>
+                    <input type="text" id="host" placeholder="http://example.com:8080" required value="http://tigertv.ink:8080">
+                </div>
+                <div class="form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <input type="text" id="username" placeholder="Username" required value="13584605788900">
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <input type="text" id="password" placeholder="Password" required value="186064098636">
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loadingSection" class="loading hidden">
+            <div class="spinner"></div>
+            <p id="loadingText">جاري التحميل...</p>
+        </div>
+
+        <!-- Categories Section -->
+        <div id="categoriesSection" class="categories-section hidden">
+            <div class="section-header">
+                <h2>📂 التصنيفات</h2>
+                <div class="action-buttons">
+                    <span class="count-badge" id="categoriesCount">0 تصنيف</span>
+                    <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+                </div>
+            </div>
+            <input type="text" id="categorySearchBox" class="search-box" placeholder="🔍 ابحث عن تصنيف...">
+            <div id="categoriesGrid" class="categories-grid"></div>
+        </div>
+
+        <!-- Channels Section -->
+        <div id="channelsSection" class="channels-section hidden">
+            <div class="breadcrumb" id="breadcrumb"></div>
+            <div class="section-header">
+                <h2>📺 القنوات</h2>
+                <div class="action-buttons">
+                    <span class="count-badge" id="channelsCount">0 قناة</span>
+                    <button class="back-btn" onclick="backToCategories()">← العودة للتصنيفات</button>
+                    <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+                </div>
+            </div>
+            <input type="text" id="channelSearchBox" class="search-box" placeholder="🔍 ابحث عن قناة...">
+            <div id="channelsGrid" class="channels-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        let allCategories = [];
+        let allChannels = [];
+        let currentCategory = null;
+        let credentials = {};
+
+        // Category icons mapping
+        const categoryIcons = {
+            'sport': '⚽',
+            'news': '📰',
+            'movie': '🎬',
+            'kids': '👶',
+            'music': '🎵',
+            'documentary': '📚',
+            'entertainment': '🎭',
+            'religious': '🕌',
+            'default': '📺'
+        };
+
+        function getCategoryIcon(categoryName) {
+            const name = categoryName.toLowerCase();
+            for (let key in categoryIcons) {
+                if (name.includes(key)) {
+                    return categoryIcons[key];
+                }
+            }
+            return categoryIcons.default;
+        }
+
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedCredentials = localStorage.getItem('xstream_credentials');
+            if (savedCredentials) {
+                credentials = JSON.parse(savedCredentials);
+                fetchCategories();
+            }
+        });
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const host = document.getElementById('host').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            credentials = { host, username, password };
+            
+            // Save credentials
+            localStorage.setItem('xstream_credentials', JSON.stringify(credentials));
+            
+            fetchCategories();
+        });
+
+        // Fetch Categories
+        async function fetchCategories() {
+            const { host, username, password } = credentials;
+            
+            // Hide all sections, show loading
+            hideAllSections();
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('loadingText').textContent = 'جاري تحميل التصنيفات...';
+            document.getElementById('errorMessage').classList.add('hidden');
+
+            try {
+                // Construct API URL for live categories
+                const apiUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_categories`;
+                
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error('فشل الاتصال بالخادم');
+                }
+
+                const data = await response.json();
+                
+                if (!data || !Array.isArray(data)) {
+                    throw new Error('لم يتم العثور على تصنيفات');
+                }
+
+                allCategories = data;
+                displayCategories(allCategories);
+                
+                // Hide loading, show categories
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('categoriesSection').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('loginSection').classList.remove('hidden');
+                showError('حدث خطأ: ' + error.message);
+            }
+        }
+
+        // Display Categories
+        function displayCategories(categories) {
+            const grid = document.getElementById('categoriesGrid');
+            const count = document.getElementById('categoriesCount');
+            
+            count.textContent = `${categories.length} تصنيف`;
+            grid.innerHTML = '';
+
+            if (categories.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">لا توجد تصنيفات متاحة</p>';
+                return;
+            }
+
+            categories.forEach((category) => {
+                const icon = getCategoryIcon(category.category_name || '');
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.style.background = getRandomGradient();
+                card.innerHTML = `
+                    <div class="category-icon">${icon}</div>
+                    <div class="category-name">${category.category_name || 'بدون اسم'}</div>
+                    <div class="category-count">ID: ${category.category_id}</div>
+                `;
+                card.onclick = () => fetchChannelsByCategory(category);
+                grid.appendChild(card);
+            });
+        }
+
+        // Fetch Channels by Category
+        async function fetchChannelsByCategory(category) {
+            currentCategory = category;
+            const { host, username, password } = credentials;
+            
+            // Hide all sections, show loading
+            hideAllSections();
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('loadingText').textContent = `جاري تحميل قنوات ${category.category_name}...`;
+
+            try {
+                // Construct API URL for live streams in category
+                const apiUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_streams&category_id=${category.category_id}`;
+                
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error('فشل الاتصال بالخادم');
+                }
+
+                const data = await response.json();
+                
+                if (!data || !Array.isArray(data)) {
+                    throw new Error('لم يتم العثور على قنوات في هذا التصنيف');
+                }
+
+                allChannels = data;
+                displayChannels(allChannels);
+                
+                // Update breadcrumb
+                document.getElementById('breadcrumb').textContent = `التصنيف: ${category.category_name}`;
+                
+                // Hide loading, show channels
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('channelsSection').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('categoriesSection').classList.remove('hidden');
+                alert('حدث خطأ: ' + error.message);
+            }
+        }
+
+        // Display Channels
+        function displayChannels(channels) {
+            const grid = document.getElementById('channelsGrid');
+            const count = document.getElementById('channelsCount');
+            
+            count.textContent = `${channels.length} قناة`;
+            grid.innerHTML = '';
+
+            if (channels.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">لا توجد قنوات متاحة في هذا التصنيف</p>';
+                return;
+            }
+
+            channels.forEach((channel) => {
+                const streamUrl = `${credentials.host}/live/${credentials.username}/${credentials.password}/${channel.stream_id}.${channel.container_extension || 'ts'}`;
+                
+                // Get channel logo URL
+                const logoUrl = channel.stream_icon || channel.icon || '';
+                
+                const card = document.createElement('div');
+                card.className = 'channel-card';
+                
+                let logoHTML = '';
+                if (logoUrl) {
+                    logoHTML = `<img src="${logoUrl}" class="channel-logo" alt="${channel.name}" onerror="this.outerHTML='<div class=\\'channel-logo placeholder\\'>📺</div>'">`;
+                } else {
+                    logoHTML = `<div class="channel-logo placeholder">📺</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="channel-header">
+                        ${logoHTML}
+                        <div class="channel-details">
+                            <div class="channel-name">${channel.name || 'قناة بدون اسم'}</div>
+                            <div class="channel-info">
+                                ${channel.stream_type ? `النوع: ${channel.stream_type}` : ''}
+                                ${channel.num ? ` | الرقم: ${channel.num}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="channel-url">${streamUrl}</div>
+                    <button class="btn-copy" onclick="copyUrl('${streamUrl}', this)">
+                        📋 نسخ الرابط
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Copy URL Function
+        function copyUrl(url, button) {
+            navigator.clipboard.writeText(url).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✅ تم النسخ!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('فشل النسخ: ' + err);
+            });
+        }
+
+        // Search Categories
+        document.getElementById('categorySearchBox').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allCategories.filter(category => 
+                (category.category_name || '').toLowerCase().includes(searchTerm)
+            );
+            displayCategories(filtered);
+        });
+
+        // Search Channels
+        document.getElementById('channelSearchBox').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allChannels.filter(channel => 
+                (channel.name || '').toLowerCase().includes(searchTerm)
+            );
+            displayChannels(filtered);
+        });
+
+        // Back to Categories
+        function backToCategories() {
+            hideAllSections();
+            document.getElementById('categoriesSection').classList.remove('hidden');
+            currentCategory = null;
+            allChannels = [];
+        }
+
+        // Logout Function
+        function logout() {
+            localStorage.removeItem('xstream_credentials');
+            credentials = {};
+            allCategories = [];
+            allChannels = [];
+            currentCategory = null;
+            hideAllSections();
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        // Hide All Sections
+        function hideAllSections() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('categoriesSection').classList.add('hidden');
+            document.getElementById('channelsSection').classList.add('hidden');
+        }
+
+        // Show Error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Random Gradient Generator
+        function getRandomGradient() {
+            const gradients = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+                'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)'
+            ];
+            return gradients[Math.floor(Math.random() * gradients.length)];
+        }
+    </script>
+</body>
+</html>
