@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار أداء البث - IPTV Smart Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-right: 4px solid #667eea;
+        }
+
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .metric-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .metric-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .metric-value.good {
+            color: #28a745;
+        }
+
+        .metric-value.warning {
+            color: #ffc107;
+        }
+
+        .metric-value.bad {
+            color: #dc3545;
+        }
+
+        .progress {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+
+        .log-entry.success {
+            color: #51cf66;
+        }
+
+        .log-entry.info {
+            color: #74c0fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 اختبار أداء البث المباشر</h1>
+            <p>قياس سرعة وكفاءة خدمة ملفات .m3u8 و .ts</p>
+        </div>
+
+        <div class="content">
+            <!-- Test 1: M3U8 Playlist Load Test -->
+            <div class="test-section">
+                <h2>📋 اختبار 1: سرعة تحميل M3U8 Playlist</h2>
+                <div class="input-group">
+                    <label>رابط M3U8:</label>
+                    <input type="text" id="m3u8Url" placeholder="أدخل رابط M3U8 للاختبار">
+                </div>
+                <button class="btn" onclick="testM3U8Load()">بدء الاختبار</button>
+                <div id="m3u8Results" class="results" style="display: none;">
+                    <h3>النتائج:</h3>
+                    <div class="metric">
+                        <span class="metric-label">زمن الاستجابة:</span>
+                        <span class="metric-value" id="m3u8LoadTime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">حجم الملف:</span>
+                        <span class="metric-value" id="m3u8Size">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">عدد الأجزاء:</span>
+                        <span class="metric-value" id="m3u8Segments">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">التخزين المؤقت:</span>
+                        <span class="metric-value" id="m3u8Cache">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test 2: TS Segment Load Test -->
+            <div class="test-section">
+                <h2>📦 اختبار 2: سرعة تحميل TS Segments</h2>
+                <div class="input-group">
+                    <label>رابط M3U8 (سيتم تحميل أول 5 أجزاء):</label>
+                    <input type="text" id="segmentUrl" placeholder="أدخل رابط M3U8">
+                </div>
+                <button class="btn" onclick="testSegmentLoad()">بدء الاختبار</button>
+                <div id="segmentResults" class="results" style="display: none;">
+                    <h3>النتائج:</h3>
+                    <div class="metric">
+                        <span class="metric-label">متوسط زمن التحميل:</span>
+                        <span class="metric-value" id="segmentAvgTime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">أسرع تحميل:</span>
+                        <span class="metric-value good" id="segmentMinTime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">أبطأ تحميل:</span>
+                        <span class="metric-value warning" id="segmentMaxTime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">معدل Cache Hit:</span>
+                        <span class="metric-value" id="segmentCacheHit">-</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="segmentProgress" style="width: 0%">0%</div>
+                    </div>
+                    <div class="log" id="segmentLog"></div>
+                </div>
+            </div>
+
+            <!-- Test 3: Throughput Test -->
+            <div class="test-section">
+                <h2>⚡ اختبار 3: قياس Throughput</h2>
+                <div class="input-group">
+                    <label>رابط TS Segment كبير:</label>
+                    <input type="text" id="throughputUrl" placeholder="أدخل رابط TS segment">
+                </div>
+                <button class="btn" onclick="testThroughput()">بدء الاختبار</button>
+                <div id="throughputResults" class="results" style="display: none;">
+                    <h3>النتائج:</h3>
+                    <div class="metric">
+                        <span class="metric-label">حجم الملف:</span>
+                        <span class="metric-value" id="throughputSize">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">زمن التحميل:</span>
+                        <span class="metric-value" id="throughputTime">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">السرعة (Mbps):</span>
+                        <span class="metric-value" id="throughputSpeed">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addLog(containerId, message, type = 'info') {
+            const log = document.getElementById(containerId);
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString('ar-SA');
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function testM3U8Load() {
+            const url = document.getElementById('m3u8Url').value;
+            if (!url) {
+                alert('الرجاء إدخال رابط M3U8');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('m3u8Results');
+            resultsDiv.style.display = 'block';
+
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const loadTime = endTime - startTime;
+                
+                const text = await response.text();
+                const size = new Blob([text]).size;
+                const segments = text.split('\n').filter(line => line && !line.startsWith('#')).length;
+                const cacheStatus = response.headers.get('x-cache-status') || 'N/A';
+
+                document.getElementById('m3u8LoadTime').textContent = `${loadTime.toFixed(2)} ms`;
+                document.getElementById('m3u8Size').textContent = `${(size / 1024).toFixed(2)} KB`;
+                document.getElementById('m3u8Segments').textContent = segments;
+                document.getElementById('m3u8Cache').textContent = cacheStatus;
+
+                // Color code based on performance
+                const timeElement = document.getElementById('m3u8LoadTime');
+                if (loadTime < 100) {
+                    timeElement.className = 'metric-value good';
+                } else if (loadTime < 300) {
+                    timeElement.className = 'metric-value warning';
+                } else {
+                    timeElement.className = 'metric-value bad';
+                }
+            } catch (error) {
+                alert('خطأ في تحميل M3U8: ' + error.message);
+            }
+        }
+
+        async function testSegmentLoad() {
+            const url = document.getElementById('segmentUrl').value;
+            if (!url) {
+                alert('الرجاء إدخال رابط M3U8');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('segmentResults');
+            resultsDiv.style.display = 'block';
+            
+            const logDiv = document.getElementById('segmentLog');
+            logDiv.innerHTML = '';
+
+            try {
+                addLog('segmentLog', 'جاري تحميل M3U8 playlist...', 'info');
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                const lines = text.split('\n');
+                const segmentUrls = lines.filter(line => line && !line.startsWith('#')).slice(0, 5);
+                
+                addLog('segmentLog', `تم العثور على ${segmentUrls.length} أجزاء للاختبار`, 'success');
+
+                const times = [];
+                let cacheHits = 0;
+
+                for (let i = 0; i < segmentUrls.length; i++) {
+                    const segmentUrl = segmentUrls[i];
+                    const progress = ((i + 1) / segmentUrls.length) * 100;
+                    document.getElementById('segmentProgress').style.width = `${progress}%`;
+                    document.getElementById('segmentProgress').textContent = `${progress.toFixed(0)}%`;
+
+                    addLog('segmentLog', `تحميل الجزء ${i + 1}/${segmentUrls.length}...`, 'info');
+
+                    const startTime = performance.now();
+                    const segResponse = await fetch(segmentUrl);
+                    const endTime = performance.now();
+                    const loadTime = endTime - startTime;
+                    
+                    await segResponse.blob(); // Consume the response
+                    
+                    times.push(loadTime);
+                    
+                    const cacheStatus = segResponse.headers.get('x-cache-status');
+                    if (cacheStatus === 'HIT') cacheHits++;
+
+                    addLog('segmentLog', `الجزء ${i + 1}: ${loadTime.toFixed(2)} ms (${cacheStatus || 'N/A'})`, 
+                           loadTime < 100 ? 'success' : 'warning');
+                }
+
+                const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+                const minTime = Math.min(...times);
+                const maxTime = Math.max(...times);
+                const cacheHitRate = (cacheHits / segmentUrls.length) * 100;
+
+                document.getElementById('segmentAvgTime').textContent = `${avgTime.toFixed(2)} ms`;
+                document.getElementById('segmentMinTime').textContent = `${minTime.toFixed(2)} ms`;
+                document.getElementById('segmentMaxTime').textContent = `${maxTime.toFixed(2)} ms`;
+                document.getElementById('segmentCacheHit').textContent = `${cacheHitRate.toFixed(0)}%`;
+
+                addLog('segmentLog', '✅ اكتمل الاختبار بنجاح!', 'success');
+            } catch (error) {
+                addLog('segmentLog', '❌ خطأ: ' + error.message, 'error');
+            }
+        }
+
+        async function testThroughput() {
+            const url = document.getElementById('throughputUrl').value;
+            if (!url) {
+                alert('الرجاء إدخال رابط TS segment');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('throughputResults');
+            resultsDiv.style.display = 'block';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const endTime = performance.now();
+                
+                const loadTime = endTime - startTime;
+                const sizeBytes = blob.size;
+                const sizeMB = sizeBytes / (1024 * 1024);
+                const speedMbps = (sizeBytes * 8) / (loadTime / 1000) / (1024 * 1024);
+
+                document.getElementById('throughputSize').textContent = `${sizeMB.toFixed(2)} MB`;
+                document.getElementById('throughputTime').textContent = `${loadTime.toFixed(2)} ms`;
+                document.getElementById('throughputSpeed').textContent = `${speedMbps.toFixed(2)} Mbps`;
+
+                const speedElement = document.getElementById('throughputSpeed');
+                if (speedMbps > 10) {
+                    speedElement.className = 'metric-value good';
+                } else if (speedMbps > 5) {
+                    speedElement.className = 'metric-value warning';
+                } else {
+                    speedElement.className = 'metric-value bad';
+                }
+            } catch (error) {
+                alert('خطأ في الاختبار: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
